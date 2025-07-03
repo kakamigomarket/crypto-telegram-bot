@@ -1,94 +1,114 @@
 import requests
+import pandas as pd
 from datetime import datetime, timedelta
 
-# Ganti dengan data bot kamu
 TOKEN = "7843209309:AAHT95IIJ0hQ6kHOC8crQtMYbOldb-BQH9w"
 CHAT_ID = "6152549114"
 
-# Pair dan konfigurasi
-pairs = [
+PAIRS = [
     "BTCUSDT", "PEPEUSDT", "FETUSDT", "SEIUSDT",
     "SOLUSDT", "SUIUSDT", "XRPUSDT", "BNBUSDT", "ETHUSDT"
 ]
 
-def get_binance_data(symbol):
-    url = f"https://api.binance.com/api/v3/ticker/24hr?symbol={symbol}"
-    res = requests.get(url).json()
+def get_klines(symbol, interval="1h", limit=100):
+    url = f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval={interval}&limit={limit}"
+    return pd.DataFrame(requests.get(url).json())
 
-    last_price = float(res['lastPrice'])
-    change_percent = float(res['priceChangePercent'])
-    volume = float(res['volume'])
+def calc_rsi(prices, period=14):
+    delta = prices.diff()
+    gain = delta.clip(lower=0)
+    loss = -delta.clip(upper=0)
+    avg_gain = gain.rolling(window=period).mean()
+    avg_loss = loss.rolling(window=period).mean().replace(0, 1e-6)
+    rs = avg_gain / avg_loss
+    return 100 - (100 / (1 + rs))
 
-    # Hitung RSI manual (ambil 100 candle terakhir)
-    klines_url = f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval=1h&limit=100"
-    candles = requests.get(klines_url).json()
-    closes = [float(k[4]) for k in candles]
+def get_pair_data(symbol):
+    ticker_url = f"https://api.binance.com/api/v3/ticker/24hr?symbol={symbol}"
+    ticker = requests.get(ticker_url).json()
+    price = float(ticker["lastPrice"])
+    change = float(ticker["priceChangePercent"])
+    volume = float(ticker["quoteVolume"])
 
-    gains, losses = [], []
-    for i in range(1, len(closes)):
-        delta = closes[i] - closes[i-1]
-        if delta > 0:
-            gains.append(delta)
-            losses.append(0)
-        else:
-            gains.append(0)
-            losses.append(-delta)
+    candles = get_klines(symbol)
+    closes = candles[4].astype(float)
+    highs = candles[2].astype(float)
+    df = pd.DataFrame({
+        "close": closes,
+        "high": highs
+    })
+    df["EMA7"] = df["close"].ewm(span=7).mean()
+    df["EMA25"] = df["close"].ewm(span=25).mean()
+    df["RSI"] = calc_rsi(df["close"])
 
-    avg_gain = sum(gains[-14:]) / 14
-    avg_loss = sum(losses[-14:]) / 14
-    rs = avg_gain / avg_loss if avg_loss != 0 else 100
-    rsi = 100 - (100 / (1 + rs))
+    last = df.iloc[-1]
+    prev_high = df["high"].iloc[-25:-1].max()
+    signal = ""
+
+    if (
+        last["close"] > prev_high and
+        last["EMA7"] > last["EMA25"] and
+        last["RSI"] > 60
+    ):
+        signal = "🚨 *Breakout Signal*"
+
+    entry = round(price, 4)
+    tp1 = round(entry * 1.05, 4)
+    tp2 = round(entry * 1.10, 4)
 
     return {
-        "price": last_price,
-        "change": change_percent,
+        "symbol": symbol,
+        "price": price,
+        "change": change,
         "volume": volume,
-        "rsi": round(rsi, 2)
+        "rsi": round(last["RSI"], 2),
+        "entry": entry,
+        "tp1": tp1,
+        "tp2": tp2,
+        "signal": signal
     }
 
-def format_report():
+def build_report():
     report = "📊 *Laporan Pasar Otomatis*\n\n"
-    for symbol in pairs:
+    breakout_alerts = ""
+    for symbol in PAIRS:
         try:
-            data = get_binance_data(symbol)
-            price = data["price"]
-            change = data["change"]
-            volume = data["volume"]
-            rsi = data["rsi"]
-
-            entry = round(price, 4)
-            tp1 = round(price * 1.05, 4)
-            tp2 = round(price * 1.10, 4)
-
+            data = get_pair_data(symbol)
             report += (
-                f"📌 *{symbol}*\n"
-                f"├ 💰 Harga: ${price}\n"
-                f"├ 📈 24h Change: {change:.2f}%\n"
-                f"├ 🔄 Volume: {volume:,.0f}\n"
-                f"├ 📊 RSI: {rsi}\n"
-                f"├ 🎯 Entry: ${entry}\n"
-                f"├ 🎯 TP1: ${tp1} | TP2: ${tp2}\n"
+                f"📌 *{data['symbol']}*\n"
+                f"├ 💰 Harga: ${data['price']}\n"
+                f"├ 📈 24h: {data['change']}%\n"
+                f"├ 🔄 Volume: {data['volume']:,.0f}\n"
+                f"├ 📊 RSI: {data['rsi']}\n"
+                f"├ 🎯 Entry: ${data['entry']}\n"
+                f"├ 🎯 TP1: ${data['tp1']} | TP2: ${data['tp2']}\n"
                 f"└──────────────\n\n"
             )
+            if data["signal"]:
+                breakout_alerts += (
+                    f"{data['signal']}: *{data['symbol']}*\n"
+                    f"• Harga: ${data['price']} (+{data['change']}%)\n"
+                    f"• RSI: {data['rsi']} | Vol: ${data['volume']:,.0f}\n"
+                    f"• EMA7 > EMA25 ✅\n"
+                    f"• Break High 24h ✅\n\n"
+                )
         except Exception as e:
-            report += f"⚠️ Gagal ambil data {symbol}: {e}\n\n"
-    return report
+            report += f"⚠️ {symbol}: {e}\n\n"
+    return report, breakout_alerts
 
-def send_to_telegram(message):
+def send_message(text):
     url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
-    payload = {
+    requests.post(url, json={
         "chat_id": CHAT_ID,
-        "text": message,
+        "text": text,
         "parse_mode": "Markdown"
-    }
-    requests.post(url, json=payload)
+    })
 
-# Cek jam dan kirim otomatis sesuai jadwal
-now_utc = datetime.utcnow()
-now_wib = now_utc + timedelta(hours=7)
-hour = now_wib.hour
-
-if hour in [7, 18]:
-    pesan = format_report()
-    prefix = "🌅 *Laporan Pagi*" if hour == 7 else "🌇 *Laporan Sore*"
-    send_to_telegram(f"{prefix}\n\n{pesan}")
+if __name__ == "__main__":
+    now_wib = datetime.utcnow() + timedelta(hours=7)
+    if now_wib.hour in [7, 18]:
+        title = "🌅 *Laporan Pagi*" if now_wib.hour == 7 else "🌇 *Laporan Sore*"
+        report, alerts = build_report()
+        send_message(f"{title}\n\n{report}")
+        if alerts:
+            send_message(f"{alerts}")
