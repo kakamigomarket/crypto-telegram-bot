@@ -1,38 +1,14 @@
-import requests
-import pandas as pd
-import time
 
-# TOKEN & CHAT_ID Telegram kamu
+import requests
+import time
+import pandas as pd
+
 TOKEN = "7843209309:AAHT95IIJ0hQ6kHOC8crQtMYbOldb-BQH9w"
 CHAT_ID = "6152549114"
 
-def fetch_binance_data(symbol="FETUSDT", interval="1h", limit=100):
-    url = f"https://api.binance.com/api/v3/klines"
-    params = {
-        "symbol": symbol,
-        "interval": interval,
-        "limit": limit
-    }
-    response = requests.get(url, params=params)
-    data = response.json()
-    df = pd.DataFrame(data, columns=[
-        "timestamp", "open", "high", "low", "close", "volume",
-        "close_time", "quote_asset_volume", "number_of_trades",
-        "taker_buy_base", "taker_buy_quote", "ignore"
-    ])
-    df["close"] = pd.to_numeric(df["close"])
-    df["volume"] = pd.to_numeric(df["volume"])
-    return df
+PAIRS = ["BTCUSDT", "PEPEUSDT", "FETUSDT", "SEIUSDT", "SOLUSDT", "SUIUSDT", "XRPUSDT", "BNBUSDT", "ETHUSDT"]
 
-def analyze_rsi(df, period=14):
-    delta = df["close"].diff()
-    gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
-    loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
-    rs = gain / loss
-    rsi = 100 - (100 / (1 + rs))
-    return round(rsi.iloc[-1], 2)
-
-def send_telegram_message(text):
+def sendTelegramMessage(text):
     url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
     payload = {
         "chat_id": CHAT_ID,
@@ -41,16 +17,53 @@ def send_telegram_message(text):
     }
     requests.post(url, json=payload)
 
-def run_report():
-    symbols = ["FETUSDT", "SEIUSDT", "ARUSDT"]
-    report = "🧠 *Laporan Strategi Otomatis Binance*\n\n"
-    for sym in symbols:
-        df = fetch_binance_data(symbol=sym)
-        rsi = analyze_rsi(df)
-        last_price = df["close"].iloc[-1]
-        report += f"• *{sym.replace('USDT','')}/USDT* → Price: ${last_price:.4f} | RSI: {rsi}\n"
+def get_rsi(symbol, interval="1h", period=14):
+    url = f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval={interval}&limit={period+1}"
+    data = requests.get(url).json()
+    closes = [float(k[4]) for k in data]
+    df = pd.DataFrame(closes, columns=["close"])
+    delta = df["close"].diff()
+    gain = delta.where(delta > 0, 0)
+    loss = -delta.where(delta < 0, 0)
+    avg_gain = gain.rolling(window=period).mean().iloc[-1]
+    avg_loss = loss.rolling(window=period).mean().iloc[-1]
+    if avg_loss == 0:
+        return 100
+    rs = avg_gain / avg_loss
+    rsi = 100 - (100 / (1 + rs))
+    return round(rsi, 2)
 
-    report += "\n📆 Auto Report - Data Real-Time dari Binance"
-    send_telegram_message(report)
+def get_data(symbol):
+    url = f"https://api.binance.com/api/v3/ticker/24hr?symbol={symbol}"
+    r = requests.get(url).json()
+    last_price = float(r["lastPrice"])
+    change_percent = float(r["priceChangePercent"])
+    volume = float(r["quoteVolume"])
+    rsi = get_rsi(symbol)
 
-run_report()
+    entry = last_price * 0.97
+    tp1 = entry * 1.08
+    tp2 = entry * 1.15
+
+    return (
+        f"*{symbol}*\n"
+        f"• Harga: `${last_price:,.4f}`\n"
+        f"• Perubahan 24h: `{change_percent:+.2f}%`\n"
+        f"• Volume 24h: `${volume:,.2f}`\n"
+        f"• RSI (1H): `{rsi}`\n"
+        f"• Entry (jemput bola): `${entry:.4f}`\n"
+        f"• TP1: `${tp1:.4f}`  |  TP2: `${tp2:.4f}`\n"
+    )
+
+def main():
+    message = "🧠 *Laporan Market Otomatis Binance*\n\n"
+    for pair in PAIRS:
+        try:
+            message += get_data(pair) + "\n"
+            time.sleep(0.2)
+        except Exception as e:
+            message += f"⚠️ Gagal ambil data untuk {pair}: {str(e)}\n\n"
+    sendTelegramMessage(message)
+
+if __name__ == "__main__":
+    main()
