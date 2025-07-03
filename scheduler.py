@@ -1,8 +1,9 @@
 import requests
-from datetime import datetime
+from datetime import datetime, timezone
 
-TOKEN = "TOKEN_BOT_KAMU"
-CHAT_ID = "CHAT_ID_KAMU"
+# Ganti dengan token dan chat_id kamu
+TOKEN = "7843209309:AAHT95IIJ0hQ6kHOC8crQtMYbOldb-BQH9w"
+CHAT_ID = "6152549114"
 
 def sendTelegramMessage(text):
     url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
@@ -12,10 +13,16 @@ def sendTelegramMessage(text):
     }
     requests.post(url, json=payload)
 
-# Cek waktu lokal Indonesia (UTC+7)
-now = datetime.utcnow().hour + 7
+# Waktu sekarang dalam UTC, tambahkan +7 jam (WIB)
+now_utc = datetime.now(timezone.utc)
+hour = now_utc.hour + 7
+minute = now_utc.minute
 
-if now == 7:
-    sendTelegramMessage("📊 *Laporan Pagi Otomatis*\n\n(scan pagi otomatis dikirim)")
-elif now == 18:
-    sendTelegramMessage("📊 *Laporan Sore Otomatis*\n\n(scan sore otomatis dikirim)")
+print(f"Bot dijalankan pada jam {hour}:{minute} WIB")
+
+# Kirim pesan jika tepat jam 07:30 WIB
+if hour == 7 and minute == 30:
+    sendTelegramMessage("🌅 *Laporan Pagi Otomatis*\n\n(scan pagi otomatis dikirim)")
+# Kirim pesan jika tepat jam 18:30 WIB
+elif hour == 18 and minute == 30:
+    sendTelegramMessage("🌆 *Laporan Sore Otomatis*\n\n(scan sore otomatis dikirim)")
