@@ -20,6 +20,3 @@ if now == 7:
 elif now == 18:
     sendTelegramMessage("📊 *Laporan Sore Otomatis*\n\n(scan sore otomatis dikirim)")
 
-
-
-sendTelegramMessage("🔥 Uji coba kirim pesan Telegram berhasil!")
