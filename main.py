@@ -44,6 +44,7 @@ def get_pair_data(symbol):
     last = df.iloc[-1]
     prev_high = df["high"].iloc[-25:-1].max()
     signal = ""
+    jemput = False
 
     if (
         last["close"] > prev_high and
@@ -51,6 +52,9 @@ def get_pair_data(symbol):
         last["RSI"] > 60
     ):
         signal = "🚨 *Breakout Signal*"
+
+    if last["RSI"] < 40:
+        jemput = True
 
     entry = round(price, 4)
     tp1 = round(entry * 1.05, 4)
@@ -65,12 +69,15 @@ def get_pair_data(symbol):
         "entry": entry,
         "tp1": tp1,
         "tp2": tp2,
-        "signal": signal
+        "signal": signal,
+        "jemput": jemput
     }
 
 def build_report():
     report = "📊 *Laporan Pasar Otomatis*\n\n"
     breakout_alerts = ""
+    jemput_alerts = ""
+
     for symbol in PAIRS:
         try:
             data = get_pair_data(symbol)
@@ -89,12 +96,19 @@ def build_report():
                     f"{data['signal']}: *{data['symbol']}*\n"
                     f"• Harga: ${data['price']} (+{data['change']}%)\n"
                     f"• RSI: {data['rsi']} | Vol: ${data['volume']:,.0f}\n"
-                    f"• EMA7 > EMA25 ✅\n"
-                    f"• Break High 24h ✅\n\n"
+                    f"• EMA7 > EMA25 ✅ | Break High 24h ✅\n\n"
                 )
+            if data["jemput"]:
+                jemput_alerts += (
+                    f"📉 *Jemput Bola*: *{data['symbol']}*\n"
+                    f"• RSI: {data['rsi']} (Oversold)\n"
+                    f"• Harga: ${data['price']} | Vol: ${data['volume']:,.0f}\n\n"
+                )
+
         except Exception as e:
             report += f"⚠️ {symbol}: {e}\n\n"
-    return report, breakout_alerts
+
+    return report, breakout_alerts, jemput_alerts
 
 def send_message(text):
     url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
@@ -108,7 +122,9 @@ if __name__ == "__main__":
     now_wib = datetime.utcnow() + timedelta(hours=7)
     if now_wib.hour in [7, 18]:
         title = "🌅 *Laporan Pagi*" if now_wib.hour == 7 else "🌇 *Laporan Sore*"
-        report, alerts = build_report()
+        report, breakout, jemput = build_report()
         send_message(f"{title}\n\n{report}")
-        if alerts:
-            send_message(f"{alerts}")
+        if breakout:
+            send_message(breakout)
+        if jemput:
+            send_message(jemput)
