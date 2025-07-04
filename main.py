@@ -5,9 +5,11 @@ from datetime import datetime, timedelta
 TOKEN = "7843209309:AAHT95IIJ0hQ6kHOC8crQtMYbOldb-BQH9w"
 CHAT_ID = "6152549114"
 
-PAIRS = [
-    "BTCUSDT", "PEPEUSDT", "FETUSDT", "SEIUSDT",
-    "SOLUSDT", "SUIUSDT", "XRPUSDT", "BNBUSDT", "ETHUSDT"
+PAIRS = [ "BTCUSDT", "PEPEUSDT", "FETUSDT", "SEIUSDT", "SOLUSDT", 
+         "SUIUSDT", "XRPUSDT", "BNBUSDT", "ETHUSDT", "NMRUSDT", 
+   "WUSDT", "JTOUSDT", "ONDOUSDT", "POLYXUSDT", "TRUUSDT",
+          "GUNUSDT", "CGPTUSDT", "ZROUSDT", "DOGEUSDT", 
+         "SHIBUSDT", "WIFUSDT", "LINKUSDT", "FILUSDT"
 ]
 
 def get_klines(symbol, interval="1h", limit=100):
@@ -120,8 +122,14 @@ def send_message(text):
 
 if __name__ == "__main__":
     now_wib = datetime.utcnow() + timedelta(hours=7)
-    if now_wib.hour in [7, 18]:
-        title = "🌅 *Laporan Pagi*" if now_wib.hour == 7 else "🌇 *Laporan Sore*"
+    if now_wib.hour in [7, 12, 18]:
+        if now_wib.hour == 7:
+            title = "🌅 *Laporan Pagi*"
+        elif now_wib.hour == 12:
+            title = "☀️ *Laporan Siang*"
+        else:
+            title = "🌇 *Laporan Sore*"
+
         report, breakout, jemput = build_report()
         send_message(f"{title}\n\n{report}")
         if breakout:
