@@ -1,9 +1,11 @@
 import requests
 import pandas as pd
 from datetime import datetime, timedelta
+import os
 
-TOKEN = "7843209309:AAHT95IIJ0hQ6kHOC8crQtMYbOldb-BQH9w"
-CHAT_ID = "6152549114"
+
+TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
 PAIRS = [ 
     "BTCUSDT", "PEPEUSDT", "FETUSDT", "SEIUSDT", "SOLUSDT", 
