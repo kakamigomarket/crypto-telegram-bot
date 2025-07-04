@@ -5,11 +5,12 @@ from datetime import datetime, timedelta
 TOKEN = "7843209309:AAHT95IIJ0hQ6kHOC8crQtMYbOldb-BQH9w"
 CHAT_ID = "6152549114"
 
-PAIRS = [ "BTCUSDT", "PEPEUSDT", "FETUSDT", "SEIUSDT", "SOLUSDT", 
-         "SUIUSDT", "XRPUSDT", "BNBUSDT", "ETHUSDT", "NMRUSDT", 
-   "WUSDT", "JTOUSDT", "ONDOUSDT", "POLYXUSDT", "TRUUSDT",
-          "GUNUSDT", "CGPTUSDT", "ZROUSDT", "DOGEUSDT", 
-         "SHIBUSDT", "WIFUSDT", "LINKUSDT", "FILUSDT"
+PAIRS = [ 
+    "BTCUSDT", "PEPEUSDT", "FETUSDT", "SEIUSDT", "SOLUSDT", 
+    "SUIUSDT", "XRPUSDT", "BNBUSDT", "ETHUSDT", "NMRUSDT", 
+    "WUSDT", "JTOUSDT", "ONDOUSDT", "POLYXUSDT", "TRUUSDT",
+    "GUNUSDT", "CGPTUSDT", "ZROUSDT", "DOGEUSDT", 
+    "SHIBUSDT", "WIFUSDT", "LINKUSDT", "FILUSDT"
 ]
 
 def get_klines(symbol, interval="1h", limit=100):
@@ -77,8 +78,8 @@ def get_pair_data(symbol):
 
 def build_report():
     report = "📊 *Laporan Pasar Otomatis*\n\n"
-    breakout_alerts = ""
-    jemput_alerts = ""
+    breakout_alerts = []
+    jemput_alerts = []
 
     for symbol in PAIRS:
         try:
@@ -94,23 +95,34 @@ def build_report():
                 f"└──────────────\n\n"
             )
             if data["signal"]:
-                breakout_alerts += (
+                breakout_alerts.append(
                     f"{data['signal']}: *{data['symbol']}*\n"
                     f"• Harga: ${data['price']} (+{data['change']}%)\n"
                     f"• RSI: {data['rsi']} | Vol: ${data['volume']:,.0f}\n"
-                    f"• EMA7 > EMA25 ✅ | Break High 24h ✅\n\n"
+                    f"• EMA7 > EMA25 ✅ | Break High 24h ✅\n"
                 )
             if data["jemput"]:
-                jemput_alerts += (
-                    f"📉 *Jemput Bola*: *{data['symbol']}*\n"
-                    f"• RSI: {data['rsi']} (Oversold)\n"
-                    f"• Harga: ${data['price']} | Vol: ${data['volume']:,.0f}\n\n"
-                )
+                jemput_alerts.append({
+                    "symbol": data["symbol"],
+                    "rsi": data["rsi"],
+                    "price": data["price"],
+                    "volume": data["volume"]
+                })
 
         except Exception as e:
             report += f"⚠️ {symbol}: {e}\n\n"
 
-    return report, breakout_alerts, jemput_alerts
+   
+    jemput_alerts.sort(key=lambda x: x["rsi"])
+    jemput_text = ""
+    for j in jemput_alerts:
+        jemput_text += (
+            f"📉 *Jemput Bola*: *{j['symbol']}*\n"
+            f"• RSI: {j['rsi']} (Oversold)\n"
+            f"• Harga: ${j['price']} | Vol: ${j['volume']:,.0f}\n\n"
+        )
+
+    return report, "\n".join(breakout_alerts), jemput_text
 
 def send_message(text):
     url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
@@ -133,6 +145,6 @@ if __name__ == "__main__":
         report, breakout, jemput = build_report()
         send_message(f"{title}\n\n{report}")
         if breakout:
-            send_message(breakout)
+            send_message("📢 *Sinyal Breakout:*\n\n" + breakout)
         if jemput:
-            send_message(jemput)
+            send_message("🧲 *Strategi Jemput Bola (RSI < 40):*\n\n" + jemput)
