@@ -3,21 +3,19 @@ import pandas as pd
 from datetime import datetime, timedelta
 import os
 
-
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
-PAIRS = [ 
-"BTCUSDT", "ETHEUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", 
-"ADAUSDT", "AVAXUSDT", "DOTUSDT", "POLUSDT", "FETUSDT", 
-"RENDERUSDT", "WLDUSDT", "ARBUSDT", "OPUSDT", "MANTAUSDT", 
-"STRKUSDT", "SEIUSDT", "SUIUSDT", "INJUSDT", "PYTHUSDT", 
-"LDOUSDT", "ONDOUSDT", "FILUSDT", "POLYXUSDT", "AAVEUSDT", 
-"FIDAUSDT", "JUPUSDT", "NEWTUSDT", "TONUSDT", "TRXUSDT", 
-"AVAXUSDT", "HBARUSDT", "DOTUSDT", "UNIUSDT", "AAVEUSDT", 
-"CFXUSDT", "APTUSDT", "STXUSDT", "TIAUSDT", "DYDXUSDT", 
-"GUSDT", "BONKUSDT", "PENGUUSDT", "VETUSDT", "ALGOUSDT" 
-  
+PAIRS = [
+    "BTCUSDT", "ETHEUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", 
+    "ADAUSDT", "AVAXUSDT", "DOTUSDT", "POLUSDT", "FETUSDT", 
+    "RENDERUSDT", "WLDUSDT", "ARBUSDT", "OPUSDT", "MANTAUSDT", 
+    "STRKUSDT", "SEIUSDT", "SUIUSDT", "INJUSDT", "PYTHUSDT", 
+    "LDOUSDT", "ONDOUSDT", "FILUSDT", "POLYXUSDT", "AAVEUSDT", 
+    "FIDAUSDT", "JUPUSDT", "NEWTUSDT", "TONUSDT", "TRXUSDT", 
+    "AVAXUSDT", "HBARUSDT", "DOTUSDT", "UNIUSDT", "AAVEUSDT", 
+    "CFXUSDT", "APTUSDT", "STXUSDT", "TIAUSDT", "DYDXUSDT", 
+    "GUSDT", "BONKUSDT", "PENGUUSDT", "VETUSDT", "ALGOUSDT"  
 ]
 
 def get_klines(symbol, interval="1h", limit=100):
@@ -61,7 +59,7 @@ def get_pair_data(symbol):
         last["EMA7"] > last["EMA25"] and
         last["RSI"] > 60
     ):
-        signal = "🚨 *Breakout Signal*"
+        signal = "\ud83d\udea8 *Breakout Signal*"
 
     if last["RSI"] < 40:
         jemput = True
@@ -84,7 +82,7 @@ def get_pair_data(symbol):
     }
 
 def build_report():
-    report = "📊 *Laporan Pasar Otomatis*\n\n"
+    report = "\ud83d\udcc8 *Laporan Pasar Otomatis*\n\n"
     breakout_alerts = []
     jemput_alerts = []
 
@@ -92,21 +90,21 @@ def build_report():
         try:
             data = get_pair_data(symbol)
             report += (
-                f"📌 *{data['symbol']}*\n"
-                f"├ 💰 Harga: ${data['price']}\n"
-                f"├ 📈 24h: {data['change']}%\n"
-                f"├ 🔄 Volume: {data['volume']:,.0f}\n"
-                f"├ 📊 RSI: {data['rsi']}\n"
-                f"├ 🎯 Entry: ${data['entry']}\n"
-                f"├ 🎯 TP1: ${data['tp1']} | TP2: ${data['tp2']}\n"
-                f"└──────────────\n\n"
+                f"\ud83d\udccc *{data['symbol']}*\n"
+                f"\u251c \ud83d\udcb0 Harga: ${data['price']}\n"
+                f"\u251c \ud83d\udcc8 24h: {data['change']}%\n"
+                f"\u251c \ud83d\udd04 Volume: {data['volume']:,.0f}\n"
+                f"\u251c \ud83d\udcca RSI: {data['rsi']}\n"
+                f"\u251c \ud83c\udf1f Entry: ${data['entry']}\n"
+                f"\u251c \ud83c\udf1f TP1: ${data['tp1']} | TP2: ${data['tp2']}\n"
+                f"\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n\n"
             )
             if data["signal"]:
                 breakout_alerts.append(
                     f"{data['signal']}: *{data['symbol']}*\n"
-                    f"• Harga: ${data['price']} (+{data['change']}%)\n"
-                    f"• RSI: {data['rsi']} | Vol: ${data['volume']:,.0f}\n"
-                    f"• EMA7 > EMA25 ✅ | Break High 24h ✅\n"
+                    f"\u2022 Harga: ${data['price']} (+{data['change']}%)\n"
+                    f"\u2022 RSI: {data['rsi']} | Vol: ${data['volume']:,.0f}\n"
+                    f"\u2022 EMA7 > EMA25 \u2705 | Break High 24h \u2705\n"
                 )
             if data["jemput"]:
                 jemput_alerts.append({
@@ -117,16 +115,15 @@ def build_report():
                 })
 
         except Exception as e:
-            report += f"⚠️ {symbol}: {e}\n\n"
+            report += f"\u26a0\ufe0f {symbol}: {e}\n\n"
 
-   
     jemput_alerts.sort(key=lambda x: x["rsi"])
     jemput_text = ""
     for j in jemput_alerts:
         jemput_text += (
-            f"📉 *Jemput Bola*: *{j['symbol']}*\n"
-            f"• RSI: {j['rsi']} (Oversold)\n"
-            f"• Harga: ${j['price']} | Vol: ${j['volume']:,.0f}\n\n"
+            f"\ud83d\udcc9 *Jemput Bola*: *{j['symbol']}*\n"
+            f"\u2022 RSI: {j['rsi']} (Oversold)\n"
+            f"\u2022 Harga: ${j['price']} | Vol: ${j['volume']:,.0f}\n\n"
         )
 
     return report, "\n".join(breakout_alerts), jemput_text
@@ -141,17 +138,19 @@ def send_message(text):
 
 if __name__ == "__main__":
     now_wib = datetime.utcnow() + timedelta(hours=7)
-    if now_wib.hour in [7, 12, 18]:
+    if now_wib.hour in [7, 12, 18, 22]:
         if now_wib.hour == 7:
-            title = "🌅 *Laporan Pagi*"
+            title = "\ud83c\udf05 *Laporan Pagi*"
         elif now_wib.hour == 12:
-            title = "☀️ *Laporan Siang*"
-        else:
-            title = "🌇 *Laporan Sore*"
+            title = "\u2600\ufe0f *Laporan Siang*"
+        elif now_wib.hour == 18:
+            title = "\ud83c\udf07 *Laporan Sore*"
+        elif now_wib.hour == 22:
+            title = "\ud83c\udf19 *Laporan Malam*"
 
         report, breakout, jemput = build_report()
         send_message(f"{title}\n\n{report}")
         if breakout:
-            send_message("📢 *Sinyal Breakout:*\n\n" + breakout)
+            send_message("\ud83d\udce2 *Sinyal Breakout:*\n\n" + breakout)
         if jemput:
-            send_message("🧲 *Strategi Jemput Bola (RSI < 40):*\n\n" + jemput)
+            send_message("\ud83e\uddf2 *Strategi Jemput Bola (RSI < 40):*\n\n" + jemput)
