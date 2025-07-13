@@ -154,3 +154,4 @@ if __name__ == "__main__":
             send_message("\ud83d\udce2 *Sinyal Breakout:*\n\n" + breakout)
         if jemput:
             send_message("\ud83e\uddf2 *Strategi Jemput Bola (RSI < 40):*\n\n" + jemput)
+            
