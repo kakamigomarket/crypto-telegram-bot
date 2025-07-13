@@ -135,6 +135,7 @@ def send_message(text):
         "text": text,
         "parse_mode": "Markdown"
     })
+    
 
 if __name__ == "__main__":
     now_wib = datetime.utcnow() + timedelta(hours=7)
