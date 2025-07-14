@@ -6,17 +6,29 @@ import os
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
-PAIRS = [
-    "BTCUSDT", "ETHEUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", 
-    "ADAUSDT", "AVAXUSDT", "DOTUSDT", "POLUSDT", "FETUSDT", 
-    "RENDERUSDT", "WLDUSDT", "ARBUSDT", "OPUSDT", "MANTAUSDT", 
-    "STRKUSDT", "SEIUSDT", "SUIUSDT", "INJUSDT", "PYTHUSDT", 
-    "LDOUSDT", "ONDOUSDT", "FILUSDT", "POLYXUSDT", "AAVEUSDT", 
-    "FIDAUSDT", "JUPUSDT", "NEWTUSDT", "TONUSDT", "TRXUSDT", 
-    "AVAXUSDT", "HBARUSDT", "DOTUSDT", "UNIUSDT", "AAVEUSDT", 
-    "CFXUSDT", "APTUSDT", "STXUSDT", "TIAUSDT", "DYDXUSDT", 
-    "GUSDT", "BONKUSDT", "PENGUUSDT", "VETUSDT", "ALGOUSDT"  
-]
+PAIRS = [ 
+    "ICPUSDT",
+    "FETUSDT",
+    "FILUSDT",
+    "SUIUSDT",
+    "SEIUSDT",
+    "ONDOUSDT",
+    "JTOUSDT",
+    "ZROUSDT",
+    "FIDAUSDT",
+    "TRUUSDT",
+    "POLYXUSDT",
+    "CGPTUSDT",
+    "APTUSDT",
+    "ARUSDT",
+    "NEARUSDT",
+    "RENDERUSDT",
+    "LINKUSDT",
+    "POLUSDT",
+    "DOTUSDT",
+    "VETUSDT",
+    "BTCUSDT"
+    ]
 
 def get_klines(symbol, interval="1h", limit=100):
     url = f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval={interval}&limit={limit}"
