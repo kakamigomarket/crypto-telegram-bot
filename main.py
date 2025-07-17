@@ -6,11 +6,50 @@ import os
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
-PAIRS = [ 
-    "ICPUSDT", "FETUSDT", "FILUSDT", "SUIUSDT", "SEIUSDT", "ONDOUSDT",
-    "JTOUSDT", "ZROUSDT", "FIDAUSDT", "TRUUSDT", "POLYXUSDT", "CGPTUSDT",
-    "APTUSDT", "ARUSDT", "NEARUSDT", "RENDERUSDT", "LINKUSDT", "POLUSDT",
-    "DOTUSDT", "VETUSDT", "BTCUSDT"
+PAIRS = [
+    "CHZUSDT",
+    "ENJUSDT",
+    "ONEUSDT",
+    "ARUSDT",
+    "MINAUSDT",
+    "MASKUSDT",
+    "SKLUSDT",
+    "CKBUSDT",
+    "RSRUSDT",
+    "BANDUSDT",
+    "ASTRUSDT",
+    "FIDAUSDT",
+    "FUNUSDT",
+    "PROMUSDT",
+    "IMXUSDT",
+    "HIFIUSDT",
+    "PHAUSDT",
+    "RLCUSDT",
+    "1INCHUSDT",
+    "MOVRUSDT",
+    "PHBUSDT",
+    "OGNUSDT",
+    "HBARUSDT",
+    "INJUSDT",
+    "ICPUSDT",
+    "FETUSDT",
+    "FILUSDT",
+    "SUIUSDT",
+    "SEIUSDT",
+    "ONDOUSDT",
+    "JTOUSDT",
+    "ZROUSDT",
+    "TRUUSDT",
+    "POLYXUSDT",
+    "CGPTUSDT",
+    "APTUSDT",
+    "NEARUSDT",
+    "RENDERUSDT",
+    "LINKUSDT",
+    "POLUSDT",
+    "DOTUSDT",
+    "VETUSDT",
+    "BTCUSDT"
 ]
 
 def get_klines(symbol, interval="4h", limit=100):
