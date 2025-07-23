@@ -7,12 +7,16 @@ TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
 PAIRS = [
-  "FUNUSDT", "HIFIUSDT", "RLCUSDT", "MOVRUSDT", "OGNUSDT",
-  "HBARUSDT", "INJUSDT", "ICPUSDT", "FETUSDT", "FILUSDT",
-  "SUIUSDT", "SEIUSDT", "ONDOUSDT", "JTOUSDT", "ZROUSDT",
-  "TRUUSDT", "POLYXUSDT", "CGPTUSDT", "APTUSDT", "NEARUSDT",
-  "RENDERUSDT", "LINKUSDT", "POLUSDT", "DOTUSDT", "VETUSDT"
+    "SEIUSDT", "RAYUSDT", "PENDLEUSDT", "JUPUSDT", "ENAUSDT",
+    "CRVUSDT", "ENSUSDT", "FORMUSDT", "TAOUSDT", "ALGOUSDT",
+    "XTZUSDT", "CAKEUSDT", "HBARUSDT", "NEXOUSDT", "GALAUSDT",
+    "IOTAUSDT", "THETAUSDT", "CFXUSDT", "WIFUSDT", "BTCUSDT",
+    "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT",
+    "ADAUSDT", "AVAXUSDT", "LINKUSDT", "AAVEUSDT", "ATOMUSDT",
+    "INJUSDT", "QNTUSDT", "ARBUSDT", "NEARUSDT", "SUIUSDT",
+    "LDOUSDT", "WLDUSDT", "FETUSDT", "GRTUSDT"
 ]
+
 
 def get_klines(symbol, interval="4h", limit=100):
     url = f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval={interval}&limit={limit}"
@@ -44,7 +48,8 @@ def get_pair_data(symbol):
 
     last = df.iloc[-1]
 
-    jemput = last["RSI"] < 40 and volume >= 20000000 and last["close"] >= last["EMA99"]
+    jemput = last["RSI"] < 40 and volume >= 5000000
+    trend_pos = "⬆️ Di atas EMA99" if last["close"] >= last["EMA99"] else "⬇️ Di bawah EMA99"
 
     entry = round(price, 4)
     tp1 = round(entry * 1.05, 4)
@@ -59,44 +64,47 @@ def get_pair_data(symbol):
         "entry": entry,
         "tp1": tp1,
         "tp2": tp2,
-        "jemput": jemput
+        "jemput": jemput,
+        "trend": trend_pos
     }
 
 def build_report():
-    report = "\ud83d\udcc8 *Laporan Pasar Otomatis*\n\n"
+    report = "📈 *Laporan Pasar Otomatis*\n\n"
     jemput_alerts = []
 
     for symbol in PAIRS:
         try:
             data = get_pair_data(symbol)
             report += (
-                f"\ud83d\udccc *{data['symbol']}*\n"
-                f"\u251c \ud83d\udcb0 Harga: ${data['price']}\n"
-                f"\u251c \ud83d\udcc8 24h: {data['change']}%\n"
-                f"\u251c \ud83d\udd04 Volume: {data['volume']:,}\n"
-                f"\u251c \ud83d\udcca RSI: {data['rsi']}\n"
-                f"\u251c \ud83c\udf1f Entry: ${data['entry']}\n"
-                f"\u251c \ud83c\udf1f TP1: ${data['tp1']} | TP2: ${data['tp2']}\n"
-                f"\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n\n"
+                f"📌 *{data['symbol']}*\n"
+                f"├ 💰 Harga: ${data['price']}\n"
+                f"├ 📊 24h: {data['change']}%\n"
+                f"├ 🔁 Volume: {data['volume']:,}\n"
+                f"├ 📉 RSI: {data['rsi']}\n"
+                f"├ 🌟 Entry: ${data['entry']}\n"
+                f"├ 🎯 TP1: ${data['tp1']} | TP2: ${data['tp2']}\n"
+                f"└ {data['trend']}\n\n"
             )
             if data["jemput"]:
                 jemput_alerts.append({
                     "symbol": data["symbol"],
                     "rsi": data["rsi"],
                     "price": data["price"],
-                    "volume": data["volume"]
+                    "volume": data["volume"],
+                    "trend": data["trend"]
                 })
 
         except Exception as e:
-            report += f"\u26a0\ufe0f {symbol}: {e}\n\n"
+            report += f"⚠️ {symbol}: {e}\n\n"
 
     jemput_alerts.sort(key=lambda x: x["rsi"])
     jemput_text = ""
     for j in jemput_alerts:
         jemput_text += (
-            f"\ud83d\udcc9 *Jemput Bola*: *{j['symbol']}*\n"
-            f"\u2022 RSI: {j['rsi']} (Oversold)\n"
-            f"\u2022 Harga: ${j['price']} | Vol: ${j['volume']:,}\n\n"
+            f"📉 *{j['symbol']}* (Jemput Bola)\n"
+            f"• RSI: {j['rsi']} (Oversold)\n"
+            f"• Harga: ${j['price']} | Vol: ${j['volume']:,}\n"
+            f"• Posisi: {j['trend']}\n\n"
         )
 
     return report, jemput_text
@@ -113,15 +121,15 @@ if __name__ == "__main__":
     now_wib = datetime.utcnow() + timedelta(hours=7)
     if now_wib.hour in [7, 12, 18, 22]:
         if now_wib.hour == 7:
-            title = "\ud83c\udf05 *Laporan Pagi*"
+            title = "🌅 *Laporan Pagi*"
         elif now_wib.hour == 12:
-            title = "\u2600\ufe0f *Laporan Siang*"
+            title = "☀️ *Laporan Siang*"
         elif now_wib.hour == 18:
-            title = "\ud83c\udf07 *Laporan Sore*"
+            title = "🌇 *Laporan Sore*"
         elif now_wib.hour == 22:
-            title = "\ud83c\udf19 *Laporan Malam*"
+            title = "🌙 *Laporan Malam*"
 
         report, jemput = build_report()
         send_message(f"{title}\n\n{report}")
         if jemput:
-            send_message("\ud83e\uddf2 *Strategi Jemput Bola (RSI < 40):*\n\n" + jemput)
+            send_message("🧲 *Strategi Jemput Bola (RSI < 40):*\n\n" + jemput)
