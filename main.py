@@ -6,17 +6,11 @@ import os
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
+# 🎯 PAIR POTENSIAL TERPILIH (Narrative AI, L1, ETF, dll)
 PAIRS = [
-    "SEIUSDT", "RAYUSDT", "PENDLEUSDT", "JUPUSDT", "ENAUSDT",
-    "CRVUSDT", "ENSUSDT", "FORMUSDT", "TAOUSDT", "ALGOUSDT",
-    "XTZUSDT", "CAKEUSDT", "HBARUSDT", "NEXOUSDT", "GALAUSDT",
-    "IOTAUSDT", "THETAUSDT", "CFXUSDT", "WIFUSDT", "BTCUSDT",
-    "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT",
-    "ADAUSDT", "AVAXUSDT", "LINKUSDT", "AAVEUSDT", "ATOMUSDT",
-    "INJUSDT", "QNTUSDT", "ARBUSDT", "NEARUSDT", "SUIUSDT",
-    "LDOUSDT", "WLDUSDT", "FETUSDT", "GRTUSDT"
+    "FETUSDT", "SEIUSDT", "ARBUSDT", "PYTHUSDT", "PENDLEUSDT", "WLDUSDT",
+    "INJUSDT", "NEARUSDT", "SUIUSDT", "SOLUSDT", "BTCUSDT", "ETHUSDT"
 ]
-
 
 def get_klines(symbol, interval="4h", limit=100):
     url = f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval={interval}&limit={limit}"
@@ -48,12 +42,12 @@ def get_pair_data(symbol):
 
     last = df.iloc[-1]
 
-    jemput = last["RSI"] < 40 and volume >= 5000000
+    jemput = last["RSI"] < 40 and volume >= 4000000
     trend_pos = "⬆️ Di atas EMA99" if last["close"] >= last["EMA99"] else "⬇️ Di bawah EMA99"
 
     entry = round(price, 4)
-    tp1 = round(entry * 1.05, 4)
-    tp2 = round(entry * 1.10, 4)
+    tp1 = round(entry * 1.05, 4)  # +5%
+    tp2 = round(entry * 1.09, 4)  # +9%
 
     return {
         "symbol": symbol,
@@ -69,7 +63,7 @@ def get_pair_data(symbol):
     }
 
 def build_report():
-    report = "📈 *Laporan Pasar Otomatis*\n\n"
+    report = "📈 *Laporan Pasar Efisien*\n\n"
     jemput_alerts = []
 
     for symbol in PAIRS:
@@ -93,13 +87,13 @@ def build_report():
                     "volume": data["volume"],
                     "trend": data["trend"]
                 })
-
         except Exception as e:
             report += f"⚠️ {symbol}: {e}\n\n"
 
-    jemput_alerts.sort(key=lambda x: x["rsi"])
+    # Urutkan Jemput Bola dari RSI terendah dan volume tertinggi
+    jemput_alerts.sort(key=lambda x: (x["rsi"], -x["volume"]))
     jemput_text = ""
-    for j in jemput_alerts:
+    for j in jemput_alerts[:2]:  # Fokus hanya 2 token terbaik
         jemput_text += (
             f"📉 *{j['symbol']}* (Jemput Bola)\n"
             f"• RSI: {j['rsi']} (Oversold)\n"
@@ -120,16 +114,13 @@ def send_message(text):
 if __name__ == "__main__":
     now_wib = datetime.utcnow() + timedelta(hours=7)
     if now_wib.hour in [7, 12, 18, 22]:
-        if now_wib.hour == 7:
-            title = "🌅 *Laporan Pagi*"
-        elif now_wib.hour == 12:
-            title = "☀️ *Laporan Siang*"
-        elif now_wib.hour == 18:
-            title = "🌇 *Laporan Sore*"
-        elif now_wib.hour == 22:
-            title = "🌙 *Laporan Malam*"
-
+        title_map = {
+            7: "🌅 *Laporan Pagi*",
+            12: "☀️ *Laporan Siang*",
+            18: "🌇 *Laporan Sore*",
+            22: "🌙 *Laporan Malam*"
+        }
         report, jemput = build_report()
-        send_message(f"{title}\n\n{report}")
+        send_message(f"{title_map[now_wib.hour]}\n\n{report}")
         if jemput:
-            send_message("🧲 *Strategi Jemput Bola (RSI < 40):*\n\n" + jemput)
+            send_message("🧲 *2 Sinyal Jemput Bola Terbaik:*\n\n" + jemput)
