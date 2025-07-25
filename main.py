@@ -8,8 +8,15 @@ CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
 # 🎯 PAIR POTENSIAL TERPILIH (Narrative AI, L1, ETF, dll)
 PAIRS = [
-    "FETUSDT", "SEIUSDT", "ARBUSDT", "PYTHUSDT", "PENDLEUSDT", "WLDUSDT",
-    "INJUSDT", "NEARUSDT", "SUIUSDT", "SOLUSDT", "BTCUSDT", "ETHUSDT"
+    "SEIUSDT", "RAYUSDT", "PENDLEUSDT", "JUPUSDT", "ENAUSDT",
+    "CRVUSDT", "ENSUSDT", "FORMUSDT", "TAOUSDT", "ALGOUSDT",
+    "XTZUSDT", "CAKEUSDT", "HBARUSDT", "NEXOUSDT", "GALAUSDT",
+    "IOTAUSDT", "THETAUSDT", "CFXUSDT", "WIFUSDT", "BTCUSDT",
+    "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT",
+    "ADAUSDT", "AVAXUSDT", "LINKUSDT", "AAVEUSDT", "ATOMUSDT",
+    "INJUSDT", "QNTUSDT", "ARBUSDT", "NEARUSDT", "SUIUSDT",
+    "LDOUSDT", "WLDUSDT", "FETUSDT", "GRTUSDT",
+    "PYTHUSDT"
 ]
 
 def get_klines(symbol, interval="4h", limit=100):
@@ -93,13 +100,16 @@ def build_report():
     # Urutkan Jemput Bola dari RSI terendah dan volume tertinggi
     jemput_alerts.sort(key=lambda x: (x["rsi"], -x["volume"]))
     jemput_text = ""
-    for j in jemput_alerts[:2]:  # Fokus hanya 2 token terbaik
-        jemput_text += (
-            f"📉 *{j['symbol']}* (Jemput Bola)\n"
-            f"• RSI: {j['rsi']} (Oversold)\n"
-            f"• Harga: ${j['price']} | Vol: ${j['volume']:,}\n"
-            f"• Posisi: {j['trend']}\n\n"
-        )
+    if jemput_alerts:
+        for j in jemput_alerts:  # Menampilkan semua token jemput bola
+            jemput_text += (
+                f"📉 *{j['symbol']}* (Jemput Bola)\n"
+                f"• RSI: {j['rsi']} (Oversold)\n"
+                f"• Harga: ${j['price']} | Vol: ${j['volume']:,}\n"
+                f"• Posisi: {j['trend']}\n\n"
+            )
+    else:
+        jemput_text = "Tidak ada sinyal Jemput Bola saat ini.\n"
 
     return report, jemput_text
 
@@ -123,4 +133,4 @@ if __name__ == "__main__":
         report, jemput = build_report()
         send_message(f"{title_map[now_wib.hour]}\n\n{report}")
         if jemput:
-            send_message("🧲 *2 Sinyal Jemput Bola Terbaik:*\n\n" + jemput)
+            send_message("🧲 *Sinyal Jemput Bola:*\n\n" + jemput)
