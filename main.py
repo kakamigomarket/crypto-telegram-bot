@@ -16,7 +16,7 @@ PAIRS = [
     "ADAUSDT", "AVAXUSDT", "LINKUSDT", "AAVEUSDT", "ATOMUSDT",
     "INJUSDT", "QNTUSDT", "ARBUSDT", "NEARUSDT", "SUIUSDT",
     "LDOUSDT", "WLDUSDT", "FETUSDT", "GRTUSDT",
-    "PYTHUSDT"
+    "PYTHUSDT" "ASRUSDT", "HYPERUSDT", "TRXUSDT"
 ]
 
 def get_klines(symbol, interval="4h", limit=100):
